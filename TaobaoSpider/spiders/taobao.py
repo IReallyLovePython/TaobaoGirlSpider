@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
+
+import requests
 import scrapy
 from scrapy.spiders import CrawlSpider
 import re
@@ -25,7 +27,7 @@ class TaobaoSpider(CrawlSpider):
             # 类别链接,用来继续爬取类别下的商品
             item_dict['goods_url'] = each.xpath("./@href").extract()[0]
 
-            item_dict['page_s'] = 0     # 当前第一页，每个新类别都重置一次
+            item_dict['page_s'] = 0  # 当前第一页，每个新类别都重置一次
 
             yield scrapy.Request(item_dict['goods_url'], callback=self.parse_data, meta={'item_dict': item_dict})
 
@@ -34,7 +36,7 @@ class TaobaoSpider(CrawlSpider):
         item = TaobaospiderItem()
         item['good_belongs'] = response.meta['item_dict']['good_belongs']
 
-        # 商品json字符串：
+        # 正则获取商品json字符串：
         json_str = re.findall(r'g_page_config = ({.*});', response.body.decode('utf-8'))[0]
 
         # 将json字符串转换成python对象
@@ -59,13 +61,46 @@ class TaobaoSpider(CrawlSpider):
             item['good_link'] = jsonpath.jsonpath(data, '$.detail_url')[0]
             # 已售数量
             item['good_sale'] = jsonpath.jsonpath(data, '$.view_sales')[0]
+            # 商品评论
+            item['good_comment'] = self.get_comment(item['good_id'])
 
             yield item
 
-        print("*"*50,response.meta['item_dict']['page_s'])
-        if response.meta['item_dict']['page_s'] < 60*5:
+        print("*" * 50, response.meta['item_dict']['page_s'])
+        if response.meta['item_dict']['page_s'] < 60 * 5:
             response.meta['item_dict']['page_s'] += 60  # 每次翻下一页时 page_s增加60
             page_str = '&bcoffset=12&s=' + str(response.meta['item_dict']['page_s'])
             next_page = re.sub('(.*seller_type=taobao)(.*)', r'\1' + page_str, response.url)
-            print(item['good_belongs'],'的下一页：',next_page)
+            print(item['good_belongs'], '的下一页：', next_page)
             yield scrapy.Request(next_page, callback=self.parse_data, meta=response.meta)
+
+    def get_comment(self, good_id):
+        current_page = '1'
+        max_page = '0'
+        good_comment = list()
+        while True:
+            comment_url = 'https://rate.taobao.com/feedRateList.htm?auctionNumId={}&currentPageNum={}&pageSize=&folded=0&callback=jsonp_tbcrate_reviews_list'.format(good_id,current_page)
+            print("当前评论地址:",comment_url)
+            print("当前页面:",current_page)
+            print("最大页数:",max_page)
+            result = requests.get(comment_url,headers={
+                'USER_AGENT':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299'
+            })
+
+            html = result.text
+
+            # 通过正则获取评论信息列表、当前评论页数、最大评论页数
+            comment_list= re.findall(r'"content":"(.*?)"',html)
+            current_page= re.search(r'"currentPageNum":(.*),',html).group(1)
+            max_page = re.search(r'"maxPage":(.+)}',html).group(1)
+
+            good_comment += comment_list
+
+            if current_page == max_page:
+                break
+            else:
+                current_page = str(int(current_page) + 1)
+        return good_comment
+
+
+

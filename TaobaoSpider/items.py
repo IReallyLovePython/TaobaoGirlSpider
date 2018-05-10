@@ -18,5 +18,5 @@ class TaobaospiderItem(scrapy.Item):
     good_price = scrapy.Field()         # 商品价格
     good_link = scrapy.Field()          # 商品链接
     good_sale = scrapy.Field()          # 已售数量
-    # good_comment = scrapy.Field()       # 商品评论
+    good_comment = scrapy.Field()       # 商品评论
 

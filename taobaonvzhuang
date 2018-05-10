@@ -1,8 +1,12 @@
 要爬取的首页
 https://nz.taobao.com/
 
-商品评论接口
-https://rate.taobao.com/feedRateList.htm?auctionNumId=566672093412&currentPageNum=1&pageSize=20&callback=jsonp_tbcrate_reviews_list
+商品评论接口(包括冗余数据)
+https://rate.taobao.com/feedRateList.htm?auctionNumId=566927780560&currentPageNum=1&pageSize=&callback=jsonp_tbcrate_reviews_list
+
+商品评论接口(不包括冗余数据)
+https://rate.taobao.com/feedRateList.htm?auctionNumId=566927780560&currentPageNum=1&pageSize=&folded=0&callback=jsonp_tbcrate_reviews_list
+
 
 所有分类
 //*[@id="sm-nav-2014"]/div[2]/div[2]/div/div[2]/dl//a

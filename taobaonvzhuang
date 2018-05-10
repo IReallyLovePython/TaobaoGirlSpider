@@ -12,19 +12,28 @@ https://rate.taobao.com/feedRateList.htm?auctionNumId=566672093412&currentPageNu
 两件套、套装裤、套装裙、特色人群、大码女装、妈妈装、婚纱礼服、民族舞台、红人私服、甜美风、文艺风
 街头风]
 
-
+商品json：
+json_obj = re.findall(r'g_page_config = ({.*});',response.body.decode('utf-8'))[0]
 一类商品根节点
-//div[@class='grid g-clearfix']/div/div
-商品图片
-./div[1]//div[@class='pic']/a/img/@src
+json_base = jsonpath.jsonpath(json_obj,'$..itemlist.data.auctions[*]')
+商品名称
+for i in json_base:
+    print(jsonpath.jsonpath(i,'$.title'),'\n')
+商品图片列表
+for i in json_base:
+    print(jsonpath.jsonpath(i,'$.sku..picUrl'),'\n')
 商品链接
-./div[1]//div[@class='pic']/a/@href
+for i in json_base:
+    print(jsonpath.jsonpath(i,'$.detail_url'),'\n')
 商品id
-./div[1]//div[@class='pic']/a/@data-nid
+for i in json_base:
+    print(jsonpath.jsonpath(i,'$.nid'),'\n')
 商品价格
-./div[3]/div[1]/div[1]/strong/text()
+for i in json_base:
+    print(jsonpath.jsonpath(i,'$.view_price'),'\n')
 已售数量
-./div[3]/div[1]/div[2]/text()
+for i in json_base:
+    print(jsonpath.jsonpath(i,'$.view_sales'),'\n')
 商品人气
 
 商品评论
